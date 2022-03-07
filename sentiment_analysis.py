@@ -1,10 +1,11 @@
-from flask import Flask, jsonify, request, abort, make_response
+from flask import Flask, jsonify, make_response
+from flask_cors import CORS
+from deep_translator import GoogleTranslator
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from nrclex import NRCLex
-from google_trans_new import google_translator
-import deepl
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/', methods=['GET'])
 def inicio():
@@ -18,32 +19,20 @@ def sentiment():
 def sentimientoVader(texto):
     if texto is None:
         make_response(jsonify({'error': 'Texto no encontrado'}), 404)
+    traductor = GoogleTranslator(target='en')
+    texto_traducido = traductor.translate(texto)
     vs = SentimentIntensityAnalyzer()
-    vs_result = vs.polarity_scores(texto)
-    return jsonify({'sentiment': vs_result})
-
-@app.route('/traductor/<string:texto>', methods=['GET'])
-def traducir(texto):
-    if texto is None:
-        make_response(jsonify({'error': 'Texto no encontrado'}), 404)
-    traductor = google_translator()
-    traduccion = traductor.translate(texto, lang_src="es", lang_tgt="en")
-    return jsonify({'traduccion': traduccion})
-
-# pip install deepl-translate (download version 1.2.0) 
-@app.route('/traductor/deepl/<string:texto>', methods=['GET'])
-def traducirDeepl(texto):
-    if texto is None:
-        make_response(jsonify({'error': 'Texto no encontrado'}), 404)
-    traduccion = deepl.translate(source_language="ES", target_language="EN", text=texto)
-    return jsonify({'traduccion': traduccion})
+    vs_result = vs.polarity_scores(texto_traducido)
+    return jsonify({'sentiment': vs_result}), 200
 
 @app.route('/sentiment/sentimentNRCLex/<string:texto>', methods=['GET'])
 def sentimientoNRCLex(texto):
     if texto is None:
         make_response(jsonify({'error': 'Texto no encontrado'}), 404)
-    nrc = NRCLex(texto)
-    return jsonify({'sentiment': nrc.raw_emotion_scores})
+    traductor = GoogleTranslator(target='en')
+    texto_traducido = traductor.translate(texto)
+    nrc = NRCLex(texto_traducido)
+    return jsonify({'sentiment': nrc.raw_emotion_scores}), 200
 
 
 if __name__ == '__main__':
