@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from deep_translator import GoogleTranslator
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -15,9 +15,11 @@ def inicio():
 def sentiment():
     return 'Para analizar el sentimiento escoga opción e introduzca texto'
 
-@app.route('/sentiment/sentimentVader/<string:texto>', methods=['GET'])
-def sentimientoVader(texto):
-    if texto is None:
+@app.route('/sentiment/sentimentVader', methods=['POST'])
+def sentimientoVader():
+    datos = request.get_json()
+    texto = datos['texto']
+    if texto is None or texto == "":
         make_response(jsonify({'error': 'Texto no encontrado'}), 404)
     traductor = GoogleTranslator(target='en')
     texto_traducido = traductor.translate(texto)
